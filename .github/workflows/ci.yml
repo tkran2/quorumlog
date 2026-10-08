@@ -1,0 +1,40 @@
+name: Consensus correctness
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: make -j2
+      - name: Core, simulator, and storage tests
+        run: make unit
+      - name: Real three-node cluster tests
+        run: make cluster
+      - name: Address and undefined-behavior sanitizers
+        run: make sanitize
+      - name: 500 simulated clusters with faults
+        run: ./build/quorum-sim --seeds 500
+      - name: Injected bugs are caught
+        run: python3 scripts/mutants.py build/quorum-sim --budget 400 --only skip-up-to-date,no-dedupe,stale-read,forget-vote,send-before-sync
+      - name: Benchmark smoke run
+        run: python3 scripts/run_bench.py build --quick --out /tmp/bench.json
+
+  cmake:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S . -B build-cmake -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build-cmake --parallel 2
+      - run: ctest --test-dir build-cmake --output-on-failure

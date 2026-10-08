@@ -1,0 +1,21 @@
+# Prices are integer ticks; 10000 could represent $100.00 for a one-cent tick.
+LIMIT 1 SELL 10010 5
+LIMIT 2 SELL 10010 7
+LIMIT 3 SELL 10020 4
+LIMIT 4 BUY 10000 9
+BOOK
+# Buy 8: maker 1 fills first, then 3 units from maker 2.
+LIMIT 5 BUY 10010 8
+ORDERS
+# Reducing maker 2 to 2 remaining units preserves its original position.
+AMEND 2 10010 2
+LIMIT 6 SELL 10010 3
+# Increasing maker 2 to 5 remaining units sends it behind maker 6.
+AMEND 2 10010 5
+MARKET 7 BUY 4
+CANCEL 4
+# Sweep remaining asks; unmatched market quantity is canceled.
+MARKET 8 BUY 100
+CANCEL 999
+CHECK
+BOOK

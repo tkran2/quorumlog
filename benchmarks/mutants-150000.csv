@@ -1,0 +1,9 @@
+bug,description,caught,seeds_needed,check_that_fired,seeds_tried,seconds
+commit-old-term,leader commits an earlier-term entry by counting replicas (Raft Figure 8),True,119967,leader-completeness,119967,1055.1
+skip-up-to-date,voters ignore how current the candidate's log is,True,2,leader-completeness,2,0.0
+match-last-index,follower acknowledges entries it never compared with the leader,True,1375,state-machine-safety,1375,12.2
+stale-term-reply,leader counts acknowledgments sent in an older term,False,,,150000,1315.5
+no-dedupe,a retried client command is applied twice,True,1,linearizability,1,0.0
+stale-read,leader answers reads locally without committing them,True,1,linearizability,1,0.0
+send-before-sync,messages leave before the state they promise is durable,True,25,commit-without-quorum,25,0.2
+forget-vote,a restarted node forgets it already voted this term,True,80,election-safety,80,0.6

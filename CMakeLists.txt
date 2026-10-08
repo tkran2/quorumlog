@@ -1,0 +1,35 @@
+cmake_minimum_required(VERSION 3.16)
+project(quorumlog LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+add_library(quorum INTERFACE)
+target_include_directories(quorum INTERFACE include third_party)
+target_compile_options(quorum INTERFACE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+
+foreach(tool node:node_main cli:client_main bench:bench_main sim:sim_main)
+  string(REPLACE ":" ";" parts ${tool})
+  list(GET parts 0 name)
+  list(GET parts 1 source)
+  add_executable(quorum-${name} src/${source}.cpp)
+  target_link_libraries(quorum-${name} PRIVATE quorum)
+endforeach()
+
+add_executable(core-tests tests/test_core.cpp)
+target_link_libraries(core-tests PRIVATE quorum)
+add_executable(storage-tests tests/test_storage.cpp)
+target_link_libraries(storage-tests PRIVATE quorum)
+
+enable_testing()
+add_test(NAME core COMMAND core-tests ${CMAKE_SOURCE_DIR}/examples/session.txt)
+add_test(NAME storage COMMAND storage-tests)
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_FOUND)
+  add_test(NAME cluster
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/test_cluster.py ${CMAKE_BINARY_DIR})
+endif()
